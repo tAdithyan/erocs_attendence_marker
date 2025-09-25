@@ -1,13 +1,8 @@
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mark Attendance</title>
   <style>
     * {
@@ -74,6 +69,22 @@
       color: #9ca3af;
     }
 
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      background-color: white;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+    }
+
     button {
       width: 100%;
       padding: 0.75rem;
@@ -85,6 +96,7 @@
       font-weight: 500;
       cursor: pointer;
       transition: background 0.3s ease, transform 0.1s ease;
+      position: relative;
     }
 
     button:hover {
@@ -111,6 +123,34 @@
       color: #dc2626;
     }
 
+    /* Loading spinner styles */
+    .loading {
+      margin-top: 1rem;
+      font-size: 1rem;
+      color: #3b82f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 24px;
+      font-weight: 600;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 3px solid #3b82f6;
+      border-top: 3px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
     @media (max-width: 480px) {
       .container {
         padding: 1.5rem;
@@ -128,93 +168,113 @@
     <h2>Mark Attendance</h2>
     <div class="input-group">
       <label for="name">Name</label>
-      <input type="text" id="name" placeholder="Enter Name" required>
+      <select id="name" required>
+        <option value="" disabled selected>Select Name</option>
+        <option value="MUHAMMAD SHAFI">MUHAMMAD SHAFI</option>
+        <option value="NIRMAL S">NIRMAL S</option>
+        <option value="SUMEERA MURALI">SUMEERA MURALI</option>
+      </select>
     </div>
     <div class="input-group">
       <label for="empId">Employee ID</label>
-      <input type="text" id="empId" placeholder="Enter Employee ID" required>
+      <input type="text" id="empId" placeholder="Employee ID will auto-fill" readonly />
     </div>
     <button onclick="markAttendance()">Submit</button>
     <p class="message" id="message"></p>
+    <div id="loading" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <span>Submitting...</span>
+    </div>
   </div>
 
   <script>
+    const scriptURL =
+      "https://script.google.com/macros/s/AKfycbzOjqMznHsF7icNY5tVtcwIYqb6UpIuR--Blpkf45ZpRpc8DHv0aQIr8WjbwIArACKNQw/exec";
+
+    // Auto-fill Employee ID based on selected name
+    document.getElementById("name").addEventListener("change", function() {
+      const selectedName = this.value;
+      let empId = "";
+      switch (selectedName) {
+        case "MUHAMMAD SHAFI":
+          empId = "EROCSRP0001";
+          break;
+        case "NIRMAL S":
+          empId = "EROCSRP0002";
+          break;
+        case "SUMEERA MURALI":
+          empId = "EROCSINT0001";
+          break;
+        default:
+          empId = "";
+      }
+      document.getElementById("empId").value = empId;
+    });
+
     function markAttendance() {
-      const name = document.getElementById('name').value.trim();
-      const empId = document.getElementById('empId').value.trim();
-      const message = document.getElementById('message');
+      const name = document.getElementById("name").value.trim();
+      const empId = document.getElementById("empId").value.trim();
+      const message = document.getElementById("message");
+      const loading = document.getElementById("loading");
+
+      // Reset message
+      message.innerText = "";
+      message.style.color = "green";
 
       if (!name || !empId) {
-        message.textContent = 'Please fill in all fields.';
-        message.classList.remove('success');
-        message.classList.add('error');
+        alert("Please select a name and ensure ID is filled!");
         return;
       }
 
-      // Simulate attendance marking (replace with actual backend call)
-      message.textContent = `Attendance marked for ${name} (ID: ${empId})`;
-      message.classList.remove('error');
-      message.classList.add('success');
+      if (!navigator.geolocation) {
+        alert("Geolocation not supported by your browser.");
+        return;
+      }
 
-      // Clear inputs after submission
-      document.getElementById('name').value = '';
-      document.getElementById('empId').value = '';
+      loading.style.display = "flex"; // Show loading spinner
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const body = new URLSearchParams({
+            name,
+            empId,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+
+          fetch(scriptURL, {
+            method: "POST",
+            body,
+          })
+            .then((res) => res.json())
+            .then((result) => {
+              loading.style.display = "none"; // Hide loading spinner
+              if (result.status === "success") {
+                message.innerText = "✅ Attendance Marked!";
+                message.style.color = "green";
+                // Clear inputs after success
+                document.getElementById("name").value = "";
+                document.getElementById("empId").value = "";
+              } else {
+                message.innerText = `❌ ${
+                  result.message || "Failed to submit!"
+                }`;
+                message.style.color = "red";
+              }
+            })
+            .catch((err) => {
+              loading.style.display = "none"; // Hide loading spinner
+              console.error(err);
+              message.innerText = "❌ Network error!";
+              message.style.color = "red";
+            });
+        },
+        (error) => {
+          loading.style.display = "none"; // Hide loading spinner if location denied
+          alert("Location access denied or unavailable.");
+        }
+      );
     }
   </script>
-   <script>
-  const scriptURL = "https://script.google.com/macros/s/AKfycbwUF2DIqSmtNQejMQWsVkY6Axy3NicNzF8vaPi3e6OSnWJSP7ofcONV6Yfma9q3YIeFIQ/exec";
-
-  function markAttendance() {
-    const name = document.getElementById("name").value.trim();
-    const empId = document.getElementById("empId").value.trim();
-    const message = document.getElementById("message");
-
-    // Reset message
-    message.innerText = "";
-    message.style.color = "green";
-
-    if (!name || !empId) {
-      alert("Please fill all fields!");
-      return;
-    }
-
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported by your browser.");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(position => {
-      const body = new URLSearchParams({
-        name,
-        empId,
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude
-      });
-
-      fetch(scriptURL, {
-        method: "POST",
-        body
-      })
-      .then(res => res.json())
-      .then(result => {
-        if (result.status === "success") {
-          message.innerText = "✅ Attendance Marked!";
-          message.style.color = "green";
-        } else {
-          message.innerText = `❌ ${result.message || "Failed to submit!"}`;
-          message.style.color = "red";
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        message.innerText = "❌ Network error!";
-        message.style.color = "red";
-      });
-
-    }, error => {
-      alert("Location access denied or unavailable.");
-    });
-  }
-</script>
 </body>
 </html>
