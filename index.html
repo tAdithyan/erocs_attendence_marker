@@ -1,15 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mark Attendance</title>
+  <title>EROCS Attendance System</title>
+
+  <!-- Robotics Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;600&family=Roboto:wght@300;400;500&display=swap"
+    rel="stylesheet">
+
   <style>
+    :root {
+      --neon-blue: #00f3ff;
+      --neon-purple: #bc13fe;
+      --dark-bg: #050510;
+      --panel-bg: rgba(10, 10, 20, 0.7);
+      --glass-border: rgba(0, 243, 255, 0.3);
+      --text-main: #e0e0ff;
+      --text-dim: #8a8ab5;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Exo 2', sans-serif;
     }
 
     body {
@@ -17,132 +36,276 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background: linear-gradient(135deg, #e0e7ff, #c3dafe);
+      background-color: var(--dark-bg);
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(0, 243, 255, 0.1) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(188, 19, 254, 0.1) 0%, transparent 20%),
+        linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      color: var(--text-main);
+      overflow: hidden;
+    }
+
+    /* Scanline effect */
+    body::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none;
+      z-index: 10;
     }
 
     .container {
-      background: #ffffff;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      position: relative;
+      background: var(--panel-bg);
+      padding: 2.5rem;
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+      box-shadow:
+        0 0 20px rgba(0, 243, 255, 0.1),
+        inset 0 0 20px rgba(0, 243, 255, 0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       text-align: center;
+      z-index: 1;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .container:hover {
+      box-shadow:
+        0 0 30px rgba(0, 243, 255, 0.2),
+        inset 0 0 30px rgba(0, 243, 255, 0.1);
+    }
+
+    /* Headers */
+    h1,
+    h2 {
+      font-family: 'Orbitron', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 2rem;
+      background: linear-gradient(90deg, var(--neon-blue), #ffffff, var(--neon-blue));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+      animation: shimmer 3s infinite linear;
+      background-size: 200% auto;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
     }
 
     h2 {
-      color: #1e3a8a;
-      margin-bottom: 1.5rem;
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+
+    @keyframes shimmer {
+      to {
+        background-position: 200% center;
+      }
+    }
+
+    /* Buttons */
+    button {
+      font-family: 'Orbitron', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .selection-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .selection-btn {
+      padding: 1.5rem;
+      background: rgba(0, 243, 255, 0.05);
+      border: 1px solid var(--neon-blue);
+      color: var(--neon-blue);
+      border-radius: 8px;
+      /* Slightly more angular */
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
+    }
+
+    .selection-btn:hover {
+      background: rgba(0, 243, 255, 0.15);
+      box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+      transform: translateY(-2px);
+      text-shadow: 0 0 8px var(--neon-blue);
+    }
+
+    .selection-btn .icon {
+      font-size: 1.4rem;
+      filter: drop-shadow(0 0 5px var(--neon-blue));
+    }
+
+    /* Back Button */
+    .back-btn {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: transparent;
+      border: 1px solid var(--text-dim);
+      color: var(--text-dim);
+      border-radius: 50%;
+      width: 36px;
+      /* Slightly smaller */
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      border-color: var(--neon-blue);
+      color: var(--neon-blue);
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+    }
+
+    /* Forms */
+    .attendance-form,
+    .login-form {
+      display: none;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .input-group {
-      margin-bottom: 1.2rem;
+      margin-bottom: 1.5rem;
       text-align: left;
+      position: relative;
     }
 
     label {
       display: block;
-      font-size: 0.9rem;
-      color: #374151;
-      margin-bottom: 0.3rem;
-      font-weight: 500;
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.85rem;
+      color: var(--neon-blue);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
-    input[type="text"] {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    input[type="text"]:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
-    }
-
-    input[type="text"]::placeholder {
-      color: #9ca3af;
-    }
-
+    input[type="text"],
+    input[type="password"],
     select {
       width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      background: rgba(5, 5, 16, 0.8);
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+      font-family: 'Exo 2', sans-serif;
       font-size: 1rem;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
-      background-color: white;
+      transition: all 0.3s ease;
     }
 
+    input:focus,
     select:focus {
       outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+      border-color: var(--neon-blue);
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
     }
 
-    button {
+    /* Submit Button (Primary) */
+    button:not(.selection-btn):not(.back-btn) {
       width: 100%;
-      padding: 0.75rem;
-      background: #3b82f6;
-      border: none;
-      border-radius: 8px;
-      color: white;
+      padding: 0.9rem;
+      background: linear-gradient(90deg, rgba(0, 243, 255, 0.1), rgba(0, 243, 255, 0.2));
+      border: 1px solid var(--neon-blue);
+      border-radius: 4px;
+      color: #fff;
       font-size: 1rem;
-      font-weight: 500;
+      font-weight: 700;
       cursor: pointer;
-      transition: background 0.3s ease, transform 0.1s ease;
-      position: relative;
+      text-shadow: 0 0 5px var(--neon-blue);
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
     }
 
-    button:hover {
-      background: #2563eb;
-      transform: translateY(-2px);
+    button:not(.selection-btn):not(.back-btn):hover {
+      background: rgba(0, 243, 255, 0.3);
+      box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
     }
 
-    button:active {
-      transform: translateY(0);
-    }
-
+    /* Messages */
     .message {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-      color: #374151;
+      margin-top: 1.2rem;
+      font-size: 0.95rem;
       min-height: 1.5rem;
+      font-weight: 500;
+      text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
     }
 
     .success {
-      color: #15803d;
+      color: #00ff9d;
+      text-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
     }
 
     .error {
-      color: #dc2626;
+      color: #ff3366;
+      text-shadow: 0 0 10px rgba(255, 51, 102, 0.3);
     }
 
-    /* Loading spinner styles */
+    /* Loading Spinner */
     .loading {
       margin-top: 1rem;
-      font-size: 1rem;
-      color: #3b82f6;
+      color: var(--neon-blue);
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 0.5rem;
-      min-height: 24px;
-      font-weight: 600;
+      gap: 0.8rem;
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 1px;
+      font-size: 0.9rem;
     }
 
     .spinner {
-      width: 18px;
-      height: 18px;
-      border: 3px solid #3b82f6;
-      border-top: 3px solid transparent;
+      width: 24px;
+      height: 24px;
+      border: 2px solid rgba(0, 243, 255, 0.2);
+      border-top: 2px solid var(--neon-blue);
       border-radius: 50%;
-      animation: spin 1s linear infinite;
+      animation: spin 0.8s linear infinite;
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
     }
 
     @keyframes spin {
@@ -157,42 +320,157 @@
         margin: 1rem;
       }
 
-      h2 {
+      h1 {
         font-size: 1.5rem;
       }
     }
   </style>
 </head>
+
 <body>
   <div class="container">
-    <h2>Mark Attendance</h2>
-    <div class="input-group">
-      <label for="name">Name</label>
-      <select id="name" required>
-        <option value="" disabled selected>Select Name</option>
-        <option value="MUHAMMAD SHAFI">MUHAMMAD SHAFI</option>
-        <option value="NIRMAL S">NIRMAL S</option>
-        <option value="SUMEERA MURALI">SUMEERA MURALI</option>
-      </select>
+    <!-- Selection Screen -->
+    <div id="selectionScreen" class="selection-screen">
+      <h1>EROCS Attendance System</h1>
+      <div class="selection-buttons">
+        <button class="selection-btn" onclick="showAttendanceForm('employee')">
+          <span class="icon">👨‍💼</span>
+          Employee Attendance
+        </button>
+        <button class="selection-btn" onclick="showAttendanceForm('student')">
+          <span class="icon">🎓</span>
+          Student Attendance
+        </button>
+      </div>
     </div>
-    <div class="input-group">
-      <label for="empId">Employee ID</label>
-      <input type="text" id="empId" placeholder="Employee ID will auto-fill" readonly />
+
+    <!-- Login Form -->
+    <div id="loginForm" class="login-form">
+      <button class="back-btn" onclick="showSelectionScreen()">←</button>
+      <h2>Employee Login</h2>
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter Username" />
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter Password"
+          style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem;" />
+      </div>
+      <button onclick="verifyLogin()">Login</button>
+      <p class="message" id="loginMessage"></p>
     </div>
-    <button onclick="markAttendance()">Submit</button>
-    <p class="message" id="message"></p>
-    <div id="loading" class="loading" style="display: none;">
-      <div class="spinner"></div>
-      <span>Submitting...</span>
+
+    <!-- Employee Attendance Form -->
+    <div id="employeeForm" class="attendance-form">
+      <button class="back-btn" onclick="showSelectionScreen()">←</button>
+      <h2>Employee Attendance</h2>
+      <div class="input-group">
+        <label for="employeeName">Name</label>
+        <select id="employeeName" required>
+          <option value="" disabled selected>Select Name</option>
+          <option value="MUHAMMAD SHAFI">MUHAMMAD SHAFI</option>
+          <option value="NIRMAL S">NIRMAL S</option>
+          <option value="SUMEERA MURALI">SUMEERA MURALI</option>
+          <option value="AISWARYA LAKSHMI BABU">AISWARYA LAKSHMI BABU</option>
+
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="employeeId">Employee ID</label>
+        <input type="text" id="employeeId" placeholder="Employee ID will auto-fill" readonly />
+      </div>
+      <button onclick="markAttendance('employee')">Submit</button>
+      <p class="message" id="employeeMessage"></p>
+      <div id="employeeLoading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <span>Submitting...</span>
+      </div>
+    </div>
+
+    <!-- Student Attendance Form -->
+    <div id="studentForm" class="attendance-form">
+      <button class="back-btn" onclick="showSelectionScreen()">←</button>
+      <h2>Student Attendance</h2>
+      <div class="input-group">
+        <label for="studentName">Name</label>
+        <select id="studentName" required>
+          <option value="" disabled selected>Select Name</option>
+          <option value="SAM SAJU">SAM SAJU</option>
+          <option value="ASTON ASHISH">ASTON ASHISH</option>
+          <option value="AMOGH MAHESH">AMOGH MAHESH</option>
+          <option value="VEDIK NAMBOODIRI">VEDIK NAMBOODIRI</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="studentId">Student ID</label>
+        <input type="text" id="studentId" placeholder="Student ID will auto-fill" readonly />
+      </div>
+      <button onclick="markAttendance('student')">Submit</button>
+      <p class="message" id="studentMessage"></p>
+      <div id="studentLoading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <span>Submitting...</span>
+      </div>
     </div>
   </div>
 
   <script>
     const scriptURL =
-      "https://script.google.com/macros/s/AKfycbzBMs3YTpqYUjzP7_5Wo7pRiAgDri3rBdg-3cSaoJZvDmpn8JzM8u2wsY_zL1sRUJcqhw/exec";
+      "https://script.google.com/macros/s/AKfycbwht3YrWD_zDDHSZuSRirv98PwWZbx1PH8_0TOSE9S_PneN-B1OCZggKBL6oOBAh6Q6zA/exec";
+
+    let currentUserType = '';
+
+    // Show selection screen
+    function showSelectionScreen() {
+      document.getElementById('selectionScreen').style.display = 'block';
+      document.getElementById('employeeForm').style.display = 'none';
+      document.getElementById('studentForm').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'none';
+      currentUserType = '';
+
+      // Clear login inputs
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('loginMessage').innerText = '';
+    }
+
+    // Show attendance form based on user type
+    function showAttendanceForm(userType) {
+      document.getElementById('selectionScreen').style.display = 'none';
+      currentUserType = userType;
+
+      if (userType === 'employee') {
+        // Show login form first for employees
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('employeeForm').style.display = 'none';
+        document.getElementById('studentForm').style.display = 'none';
+      } else if (userType === 'student') {
+        document.getElementById('employeeForm').style.display = 'none';
+        document.getElementById('studentForm').style.display = 'block';
+        document.getElementById('loginForm').style.display = 'none';
+      }
+    }
+
+    function verifyLogin() {
+      const usernameInput = document.getElementById('username').value.trim();
+      const passwordInput = document.getElementById('password').value.trim();
+      const loginMessage = document.getElementById('loginMessage');
+
+      if (usernameInput === 'EROCS7700' && passwordInput === 'EROCS0077') {
+        // Login success
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('employeeForm').style.display = 'block';
+        loginMessage.innerText = '';
+      } else {
+        // Login failed
+        loginMessage.innerText = '❌ Invalid Credentials';
+        loginMessage.style.color = 'red';
+      }
+    }
 
     // Auto-fill Employee ID based on selected name
-    document.getElementById("name").addEventListener("change", function() {
+    document.getElementById("employeeName").addEventListener("change", function () {
       const selectedName = this.value;
       let empId = "";
       switch (selectedName) {
@@ -205,39 +483,114 @@
         case "SUMEERA MURALI":
           empId = "EROCSINT0001";
           break;
+        case "AISWARYA LAKSHMI BABU":
+          empId = "EROCSINT0002";
+          break;
         default:
           empId = "";
       }
-      document.getElementById("empId").value = empId;
+      document.getElementById("employeeId").value = empId;
     });
 
-    function markAttendance() {
-      const name = document.getElementById("name").value.trim();
-      const empId = document.getElementById("empId").value.trim();
-      const message = document.getElementById("message");
-      const loading = document.getElementById("loading");
+    // Auto-fill Student ID based on selected name
+    document.getElementById("studentName").addEventListener("change", function () {
+      const selectedName = this.value;
+      let studentId = "";
+      switch (selectedName) {
+        case "SAM SAJU":
+          studentId = "EROCSTP0010";
+          break;
+        case "ASTON ASHISH":
+          studentId = "EROCSTP0011";
+          break;
+        case "AMOGH MAHESH":
+          studentId = "EROCSTP0013";
+          break;
+        case "VEDIK NAMBOODIRI":
+          studentId = "EROCSTP0014";
+          break;
+        default:
+          studentId = "";
+      }
+      document.getElementById("studentId").value = studentId;
+    });
+
+    function markAttendance(userType) {
+      let name, id, message, loading;
+
+      if (userType === 'employee') {
+        name = document.getElementById("employeeName").value.trim();
+        id = document.getElementById("employeeId").value.trim();
+        message = document.getElementById("employeeMessage");
+        loading = document.getElementById("employeeLoading");
+      } else if (userType === 'student') {
+        name = document.getElementById("studentName").value.trim();
+        id = document.getElementById("studentId").value.trim();
+        message = document.getElementById("studentMessage");
+        loading = document.getElementById("studentLoading");
+      }
 
       // Reset message
       message.innerText = "";
       message.style.color = "green";
 
-      if (!name || !empId) {
-        alert("Please select a name and ensure ID is filled!");
-        return;
-      }
-
-      if (!navigator.geolocation) {
-        alert("Geolocation not supported by your browser.");
+      if (!name || !id) {
+        alert("Please fill in all required fields!");
         return;
       }
 
       loading.style.display = "flex"; // Show loading spinner
 
+      // For students, no location verification needed
+      if (userType === 'student') {
+        const body = new URLSearchParams({
+          name,
+          id,
+          userType,
+          latitude: 0,
+          longitude: 0,
+        });
+
+        fetch(scriptURL, {
+          method: "POST",
+          body,
+        })
+          .then((res) => res.json())
+          .then((result) => {
+            loading.style.display = "none";
+            if (result.status === "success") {
+              message.innerText = "✅ Attendance Marked!";
+              message.style.color = "green";
+              // Clear inputs after success
+              document.getElementById("studentName").value = "";
+              document.getElementById("studentId").value = "";
+            } else {
+              message.innerText = `❌ ${result.message || "Failed to submit!"}`;
+              message.style.color = "red";
+            }
+          })
+          .catch((err) => {
+            loading.style.display = "none";
+            console.error(err);
+            message.innerText = "❌ Network error!";
+            message.style.color = "red";
+          });
+        return;
+      }
+
+      // For employees, location verification is required
+      if (!navigator.geolocation) {
+        loading.style.display = "none";
+        alert("Geolocation not supported by your browser.");
+        return;
+      }
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const body = new URLSearchParams({
             name,
-            empId,
+            id,
+            userType,
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           });
@@ -248,33 +601,32 @@
           })
             .then((res) => res.json())
             .then((result) => {
-              loading.style.display = "none"; // Hide loading spinner
+              loading.style.display = "none";
               if (result.status === "success") {
                 message.innerText = "✅ Attendance Marked!";
                 message.style.color = "green";
                 // Clear inputs after success
-                document.getElementById("name").value = "";
-                document.getElementById("empId").value = "";
+                document.getElementById("employeeName").value = "";
+                document.getElementById("employeeId").value = "";
               } else {
-                message.innerText = `❌ ${
-                  result.message || "Failed to submit!"
-                }`;
+                message.innerText = `❌ ${result.message || "Failed to submit!"}`;
                 message.style.color = "red";
               }
             })
             .catch((err) => {
-              loading.style.display = "none"; // Hide loading spinner
+              loading.style.display = "none";
               console.error(err);
               message.innerText = "❌ Network error!";
               message.style.color = "red";
             });
         },
         (error) => {
-          loading.style.display = "none"; // Hide loading spinner if location denied
+          loading.style.display = "none";
           alert("Location access denied or unavailable.");
         }
       );
     }
   </script>
 </body>
+
 </html>
